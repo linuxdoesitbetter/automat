@@ -29,12 +29,12 @@ exitOnOff(
 State state_on;
 State state_off;
 
-Transition transition_off_1 = {
+Transition transition_off_on = {
   .m_event_id     = EV_SWITCH,
   .m_target_state = &state_on
 };
 
-Transition transition_on_1 = {
+Transition transition_on_off = {
   .m_event_id     = EV_SWITCH,
   .m_target_state = &state_off
 };
@@ -44,7 +44,7 @@ State state_off = {
   .m_do          = doOnOff,
   .m_exit        = exitOnOff,
   .m_transitions = (Transition*[]){
-      &transition_off_1,
+      &transition_off_on,
       NULL },
   .m_name        = "State Off"
 };
@@ -54,7 +54,7 @@ State state_on = {
   .m_do          = doOnOff,
   .m_exit        = exitOnOff,
   .m_transitions = (Transition*[]){
-      &transition_on_1,
+      &transition_on_off,
       NULL },
   .m_name        = "State On"
 };
