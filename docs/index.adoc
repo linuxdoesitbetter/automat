@@ -1,0 +1,18 @@
+= libautomat
+:doctype: book
+:lang: de
+:authors: Andreas Noe
+:copyright: (C)2023 by {authors}
+:source-highlighter: rouge
+:toc: left
+:toc-title: Inhalt
+:toclevels: 5
+:sectnums:
+:multipage-level: 1
+:imagesdir: ./imagesdir
+:important-caption: ⚠ WICHTIG
+
+Ein Framework zum Erstellen von Automaten aus UML 2.5 - konformen
+Zustandsdiagrammen.
+
+include::api.adoc[]

@@ -1,0 +1,5 @@
+== API
+
+Header:: #include<autmat.h>
+Bibliothek:: libautomat
+Linker:: -lautomat
