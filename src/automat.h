@@ -10,6 +10,9 @@
 struct SEvent;
 typedef struct SEvent Event;
 
+struct SAction;
+typedef struct SAction Action;
+
 struct STransition;
 typedef struct STransition Transition;
 
@@ -21,8 +24,10 @@ typedef struct SStateMachine StateMachine;
 
 //Typ-Definitionen
 
-typedef void (*Action)( State * t_state, Event * t_event );
-typedef bool (*Guard)( State * t_state, Event * t_event );
+typedef void (*ActionHandler)( StateMachine * t_state_machine, Event * t_event );
+typedef void (*Effect)( StateMachine * t_state_machine, Event * t_event );
+typedef bool (*Guard)( StateMachine * t_state_machine, Event * t_event );
+
 
 struct SEvent {
   int    m_id;
@@ -30,30 +35,41 @@ struct SEvent {
   int    m_data_size;
 };
 
+struct SAction {
+  int           m_event_id;
+  Guard         m_guard;
+  ActionHandler m_action_handler;
+};
+
 struct STransition {
-  int     m_event_id;
-  State * m_target_state;
+  int      m_event_id;
+  State  * m_target_state;
+  Guard    m_guard;
+  Effect   m_effect;
 };
 
 struct SState {
-  Action        m_entry;
-  Action        m_do;
-  Action        m_exit;
-  Transition ** m_transitions;
-  const char  * m_name;
+  const char * const m_name;
+  ActionHandler      m_entry;
+  ActionHandler      m_do;
+  ActionHandler      m_exit;
+  Action **          m_actions;
+  Transition **      m_transitions;
 };
 
 struct SStateMachine {
-  bool           m_accepted;
-  State  * const m_initial_state;
-  State  *       m_current_state;
-  State **       m_states;
+  const char * const m_name;
+  bool               m_accepted;
+  void *             m_context;
+  State *            m_current_state;
+  Transition         m_initial_transition;
+  State **           m_states;
 };
 
 //Funktions-Deklarationen
 
 void
-triggerStateMachine(
+processStateMachine(
     StateMachine * t_state_machine,
     Event        * t_event );
 
