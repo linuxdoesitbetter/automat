@@ -1,5 +1,136 @@
 == API
 
-Header:: #include<autmat.h>
+Header::
++
+[source,c]
+----
+#include <automat.h>
+----
+
 Bibliothek:: libautomat
+
 Linker:: -lautomat
+
+=== Typen
+
+==== Event
+Definition::
++
+[source,c]
+----
+struct SEvent {
+  int    m_id;
+  void * m_data;
+  int    m_data_size;
+};
+
+typedef struct SEvent Event;
+----
+
+Beschreibung::
+Mit der Funktion <<processStateMachine(),`processStateMachine()`>> werden Events
+an die StateMachine übergeben und lösen in der Folge Aktionen und Transitionen
+aus. Der Member `m_id` hält die Event-Identifikatonsnummer, anhand der die
+Events unterschieden werden. Diese Id ist anwendungsspezifisch und soll nur
+positive Werte haben. Über die Member `m_data` und `m_data_size` können den
+Events Daten mitgegeben werden. Die Events werden den Handlern von Aktionen,
+Effekten und Guards als Parameter übergegeben. Die Anwendung entscheidet anhand
+der Event-Id, auf welchen Typ `m_data` zu casten ist. Die Größe des Datums ist
+über den Member `m_data_size` mitzugeben. Damit ist es z. B. möglich ein Event
+zu kopieren.
+
+Beispiel::
++
+[source,c]
+----
+#include <automat.h>
+
+typedef enum {
+  KEY_EV_DOWN,
+  KEY_EV_SHORT,
+  KEY_EV_LONG,
+  KEY_EV_REPEAT,
+  KEY_EV_UP
+} KeyEvent;
+
+typedef struct {
+  int      m_key;
+  KeyEvent m_event;
+} KeyEventData;
+
+// ...
+
+enum EventId{
+  EV_TIME_10_MS,
+  EV_KEY,
+  EV_JOYSTICK,
+  EV_ENCODER,
+  EV_OVER_VOLTAGE,
+  EV_POWER_FAIL
+};
+
+extern StateMachine sm_process_control;
+
+KeyEventData q_short_press {
+  .m_key   = 'q',
+  .m_event = KEY_EV_SHORT
+};
+
+Event key_q_short_press = {
+  .m_id        = EV_KEY,
+  .m_data      = &q_short_press,
+  .m_data_size = sizeof( KeyEventData )
+};
+
+processStateMachine( &sm_process_control, &key_q_short_press );
+
+// ...
+
+//_____________________________________________________________________________
+void
+action_menu_input(
+    StateMachine * t_state_machine,
+    Event        * t_event ) {
+
+  (void)t_state_machine;
+
+  if ( EV_KEY == t_event->m_id ) {
+
+    KeyEventData * key_event_data = (KeyEventData*)t_event->m_data;
+
+    if (    ('q'          == key_event_data->m_key)
+         && (KEY_EV_SHORT == key_event_data->m_event) ) {
+
+      // ...
+    }
+  }
+} //action_menu_input
+
+----
+
+==== Action
+Definiton::
++
+[source,c]
+----
+struct SAction {
+  int           m_event_id;
+  Guard         m_guard;
+  ActionHandler m_action_handler;
+};
+
+typedef struct SAction Action;
+----
+
+Beschreibung::
++
+Mithilfe dieses Typs werden Aktionen in einem Zustand definiert. Aktionen
+werden als Reaktion auf ein Event ausgeführt, führen aber im Gegensatz zu
+Transitionen nicht zum Verlassen des aktuellen Zustands.
++
+Der Member `m_event_id` gibt an, auf welchen Event-Typ reagiert werden soll.
+Mit dem Member `m_guard` kann ein Guard hinterlegt werden, mit dem entschieden
+werden kann, ob der ActionHandler tatsächlich aufzurufen ist. Wird `m_guard` mit
+`NULL` initialisiert, wird der ActionHandler bei jedem Event mit passendem Typ
+ausgeführt. Der ActionHandler `m_action_handler` repräsentiert die auszuführende
+Funktion.
