@@ -1,16 +1,22 @@
 #include "automat.h"
 
 static inline void
+processSimpleState(
+    StateMachine * t_state_machine,
+    SimpleState  * t_current_state,
+    Event        * t_event );
+
+static inline void
 processTransitions(
-    StateMachine *  t_state_machine,
-    State        ** t_current_state,
-    Event        *  t_event );
+    StateMachine * t_state_machine,
+    SimpleState  * t_current_state,
+    Event        * t_event );
 
 static inline void
 processActions(
-    StateMachine *  t_state_machine,
-    State        ** t_current_state,
-    Event        *  t_event );
+    StateMachine * t_state_machine,
+    SimpleState  * t_current_state,
+    Event        * t_event );
 
 //_____________________________________________________________________________
 void
@@ -32,31 +38,44 @@ processStateMachine(
           t_event );
     }
 
-    if ( (*current_state)->m_entry ) {
+    switch ( (*current_state)->m_type_id ) {
+    case STATE_TYPE_SIMPLE:
+      if ( ((SimpleState*)*current_state)->m_entry ) {
 
-      (*current_state)->m_entry( t_state_machine, t_event );
+        ((SimpleState*)*current_state)->m_entry(
+            t_state_machine,
+            t_event );
+      }
+      break;
+    case STATE_TYPE_COMPOSITE:
+      break;
+    default:
+      break;
     }
   }
 
-  //Do-Aktion des aktuellen Zustands ausführen.
-  if ( (*current_state)->m_do ) {
-
-    (*current_state)->m_do( t_state_machine, t_event );
+  switch ( (*current_state)->m_type_id ) {
+  case STATE_TYPE_SIMPLE:
+    processSimpleState(
+        t_state_machine,
+        (SimpleState*)(*current_state),
+        t_event );
+    break;
+  case STATE_TYPE_COMPOSITE:
+    break;
+  default:
+    break;
   }
-
-  processTransitions( t_state_machine, current_state, t_event );
-  processActions( t_state_machine, current_state, t_event );
-
 } //triggerStateMachine
 
 //_____________________________________________________________________________
 static inline void
 processTransitions(
-    StateMachine *  t_state_machine,
-    State        ** t_current_state,
-    Event        *  t_event ) {
+    StateMachine * t_state_machine,
+    SimpleState  * t_current_state,
+    Event        * t_event ) {
 
-  Transition ** transition = (*t_current_state)->m_transitions;
+  Transition ** transition = t_current_state->m_transitions;
 
   if ( transition ) {
 
@@ -68,9 +87,9 @@ processTransitions(
              || (*transition)->m_guard( t_state_machine, t_event ) ) {
 
           //Exit-Aktion des bishherigen Zustands aufrufen.
-          if ( (*t_current_state)->m_exit ) {
+          if ( t_current_state->m_exit ) {
 
-            (*t_current_state)->m_exit( t_state_machine, t_event );
+            t_current_state->m_exit( t_state_machine, t_event );
           }
 
           //Effekt der Transition ausführen.
@@ -80,14 +99,23 @@ processTransitions(
           }
 
           //Zustand wechseln.
-          (*t_current_state) = (*transition)->m_target_state;
+          t_state_machine->m_current_state = (*transition)->m_target_state;
 
-          //Entry-Aktion des neuen Zustands aufrufen.
-          if ( (*t_current_state)->m_entry ) {
+          switch ( t_state_machine->m_current_state->m_type_id ) {
+          case STATE_TYPE_SIMPLE:
+            //Entry-Aktion des neuen Zustands aufrufen.
+            if ( t_current_state->m_entry ) {
 
-            (*t_current_state)->m_entry( t_state_machine, t_event );
+              ((SimpleState*)t_current_state)->m_entry(
+                  t_state_machine,
+                  t_event );
+            }
+            break;
+          case STATE_TYPE_COMPOSITE:
+            break;
+          default:
+            break;
           }
-
           break;
         }
       }
@@ -100,11 +128,11 @@ processTransitions(
 //_____________________________________________________________________________
 static inline void
 processActions(
-    StateMachine *  t_state_machine,
-    State        ** t_current_state,
-    Event        *  t_event ) {
+    StateMachine * t_state_machine,
+    SimpleState  * t_current_state,
+    Event        * t_event ) {
 
-  Action ** action = (*t_current_state)->m_actions;
+  Action ** action = t_current_state->m_actions;
 
   if ( action ) {
 
@@ -126,3 +154,20 @@ processActions(
     }
   }
 } //processActions
+
+//_____________________________________________________________________________
+static inline void
+processSimpleState(
+    StateMachine * t_state_machine,
+    SimpleState  * t_current_state,
+    Event        * t_event ) {
+
+  //Do-Aktion des aktuellen Zustands ausführen.
+  if ( t_current_state->m_do ) {
+
+    t_current_state->m_do( t_state_machine, t_event );
+  }
+
+  processTransitions( t_state_machine, t_current_state, t_event );
+  processActions( t_state_machine, t_current_state, t_event );
+} //processSimpleState

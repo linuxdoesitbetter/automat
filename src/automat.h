@@ -7,6 +7,12 @@
 
 //Typ-Deklarationen
 
+typedef enum {
+  STATE_TYPE_BASE = 0,
+  STATE_TYPE_SIMPLE,
+  STATE_TYPE_COMPOSITE
+} StateType;
+
 struct SEvent;
 typedef struct SEvent Event;
 
@@ -19,15 +25,28 @@ typedef struct STransition Transition;
 struct SState;
 typedef struct SState State;
 
+struct SSimpleState;
+typedef struct SSimpleState SimpleState;
+
 struct SStateMachine;
 typedef struct SStateMachine StateMachine;
 
 //Typ-Definitionen
 
-typedef void (*ActionHandler)( StateMachine * t_state_machine, Event * t_event );
-typedef void (*Effect)( StateMachine * t_state_machine, Event * t_event );
-typedef bool (*Guard)( StateMachine * t_state_machine, Event * t_event );
+typedef void
+(*ActionHandler)(
+    StateMachine * t_state_machine,
+    Event        * t_event );
 
+typedef void
+(*Effect)(
+    StateMachine * t_state_machine,
+    Event        * t_event );
+
+typedef bool
+(*Guard)(
+    StateMachine * t_state_machine,
+    Event        * t_event );
 
 struct SEvent {
   int    m_id;
@@ -50,6 +69,12 @@ struct STransition {
 
 struct SState {
   const char * const m_name;
+  int                m_type_id;
+};
+
+struct SSimpleState {
+  const char * const m_name;
+  int                m_type_id;
   ActionHandler      m_entry;
   ActionHandler      m_do;
   ActionHandler      m_exit;

@@ -46,8 +46,8 @@ actionOffCountGuard(
     StateMachine * t_state_machine,
     Event        * t_event );
 
-State state_on;
-State state_off;
+SimpleState state_on;
+SimpleState state_off;
 
 TestMachineContext tm_context = {
   .m_counter = 0
@@ -61,20 +61,21 @@ Action action_off_count = {
 
 Transition transition_off_on = {
   .m_event_id     = EV_SWITCH,
-  .m_target_state = &state_on,
+  .m_target_state = (State*)&state_on,
   .m_guard        = NULL,
   .m_effect       = NULL
 };
 
 Transition transition_on_off = {
   .m_event_id     = EV_SWITCH,
-  .m_target_state = &state_off,
+  .m_target_state = (State*)&state_off,
   .m_guard        = NULL,
   .m_effect       = NULL
 };
 
-State state_off = {
+SimpleState state_off = {
   .m_name        = "State Off",
+  .m_type_id     = STATE_TYPE_SIMPLE,
   .m_entry       = entryOff,
   .m_do          = doOnOff,
   .m_exit        = exitOnOff,
@@ -87,8 +88,9 @@ State state_off = {
       NULL }
 };
 
-State state_on = {
+SimpleState state_on = {
   .m_name        = "State On",
+  .m_type_id     = STATE_TYPE_SIMPLE,
   .m_entry       = entryOn,
   .m_do          = doOnOff,
   .m_exit        = exitOnOff,
@@ -105,12 +107,12 @@ StateMachine state_machine = {
   .m_current_state      = NULL,
   .m_initial_transition = {
       .m_event_id       = -1,
-      .m_target_state   = &state_off,
+      .m_target_state   = (State*)&state_off,
       .m_guard          = NULL,
       .m_effect         = effectStart },
   .m_states             = (State*[]) {
-      &state_off,
-      &state_on,
+      (State*)&state_off,
+      (State*)&state_on,
       NULL
   }
 };
