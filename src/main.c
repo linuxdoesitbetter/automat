@@ -7,6 +7,24 @@ enum EventId {
   EV_COUNT
 };
 
+SignalEvent switch_event = {
+  .m_type_id   = EVENT_TYPE_SIGNAL,
+  .m_signal_id = EV_SWITCH,
+  .m_data      = NULL,
+  .m_data_size = 0
+};
+
+SignalEvent count_event = {
+  .m_type_id   = EVENT_TYPE_SIGNAL,
+  .m_signal_id = EV_SWITCH,
+  .m_data      = NULL,
+  .m_data_size = 0
+};
+
+Event start_event = {
+  .m_type_id = EVENT_TYPE_BASE
+};
+
 typedef struct STestMachineContext {
   int m_counter;
 } TestMachineContext;
@@ -14,37 +32,37 @@ typedef struct STestMachineContext {
 void
 effectStart(
     StateMachine * t_state_machine,
-    Event        * t_event );
+    SignalEvent *  t_event );
 
 void
 entryOff(
     StateMachine * t_state_machine,
-    Event        * t_event );
+    SignalEvent *  t_event );
 
 void
 entryOn(
     StateMachine * t_state_machine,
-    Event        * t_event );
+    SignalEvent *  t_event );
 
 void
 doOnOff(
     StateMachine * t_state_machine,
-    Event        * t_event );
+    SignalEvent *  t_event );
 
 void
 exitOnOff(
     StateMachine * t_state_machine,
-    Event        * t_event );
+    SignalEvent *  t_event );
 
 void
 actionOffCount(
     StateMachine * t_state_machine,
-    Event        * t_event );
+    SignalEvent *  t_event );
 
 bool
 actionOffCountGuard(
     StateMachine * t_state_machine,
-    Event        * t_event );
+    SignalEvent *  t_event );
 
 SimpleState state_on;
 SimpleState state_off;
@@ -54,20 +72,20 @@ TestMachineContext tm_context = {
 };
 
 Action action_off_count = {
-  .m_event_id       = EV_COUNT,
+  .m_event          = (Event*)&count_event,
   .m_guard          = actionOffCountGuard,
   .m_action_handler = actionOffCount,
 };
 
 Transition transition_off_on = {
-  .m_event_id     = EV_SWITCH,
+  .m_event        = (Event*)&switch_event,
   .m_target_state = (State*)&state_on,
   .m_guard        = NULL,
   .m_effect       = NULL
 };
 
 Transition transition_on_off = {
-  .m_event_id     = EV_SWITCH,
+  .m_event        = (Event*)&switch_event,
   .m_target_state = (State*)&state_off,
   .m_guard        = NULL,
   .m_effect       = NULL
@@ -102,19 +120,15 @@ SimpleState state_on = {
 
 StateMachine state_machine = {
   .m_name               = "Test Machine",
+  .m_parent             = NULL,
   .m_accepted           = false,
   .m_context            = &tm_context,
   .m_current_state      = NULL,
   .m_initial_transition = {
-      .m_event_id       = -1,
+      .m_event          = &start_event,
       .m_target_state   = (State*)&state_off,
       .m_guard          = NULL,
-      .m_effect         = effectStart },
-  .m_states             = (State*[]) {
-      (State*)&state_off,
-      (State*)&state_on,
-      NULL
-  }
+      .m_effect         = effectStart }
 };
 
 //_____________________________________________________________________________
@@ -126,11 +140,22 @@ main(
   (void) t_argc;
   (void) t_argv;
 
-  int result = 0;
-
-  Event event_none   = { .m_id = EV_NONE, .m_data = NULL, .m_data_size = 0 };
-  Event event_switch = { .m_id = EV_SWITCH, .m_data = NULL, .m_data_size = 0 };
-  Event event_count  = { .m_id = EV_COUNT, .m_data = NULL, .m_data_size = 0 };
+  int         result       = 0;
+  SignalEvent event_none   = {
+    .m_type_id   = EVENT_TYPE_SIGNAL,
+    .m_signal_id = EV_NONE,
+    .m_data      = NULL,
+    .m_data_size = 0 };
+  SignalEvent event_switch = {
+    .m_type_id   = EVENT_TYPE_SIGNAL,
+    .m_signal_id = EV_SWITCH,
+    .m_data      = NULL,
+    .m_data_size = 0 };
+  SignalEvent event_count  = {
+    .m_type_id   = EVENT_TYPE_SIGNAL,
+    .m_signal_id = EV_COUNT,
+    .m_data      = NULL,
+    .m_data_size = 0 };
 
   processStateMachine( &state_machine, &event_none );
   processStateMachine( &state_machine, &event_count );
@@ -148,55 +173,55 @@ main(
 void
 entryOff(
     StateMachine * t_state_machine,
-    Event        * t_event ) {
+    SignalEvent *  t_event ) {
 
   printf(
       "%-10s (Event: %2d) entry / switch off\n",
       t_state_machine->m_current_state->m_name,
-      t_event->m_id );
+      t_event->m_signal_id );
 } //entryOff
 
 //_____________________________________________________________________________
 void
 entryOn(
     StateMachine * t_state_machine,
-    Event        * t_event ) {
+    SignalEvent *  t_event ) {
 
   printf(
       "%-10s (Event: %2d) entry / switch on\n",
       t_state_machine->m_current_state->m_name,
-      t_event->m_id );
+      t_event->m_signal_id );
 } //entryOn
 
 //_____________________________________________________________________________
 void
 doOnOff(
     StateMachine * t_state_machine,
-    Event        * t_event ) {
+    SignalEvent *  t_event ) {
 
   printf(
       "%-10s (Event: %2d) do    /\n",
       t_state_machine->m_current_state->m_name,
-      t_event->m_id );
+      t_event->m_signal_id );
 } //doOnOff
 
 //_____________________________________________________________________________
 void
 exitOnOff(
     StateMachine * t_state_machine,
-    Event        * t_event ) {
+    SignalEvent *  t_event ) {
 
   printf(
       "%-10s (Event: %2d) exit  / \n",
       t_state_machine->m_current_state->m_name,
-      t_event->m_id );
+      t_event->m_signal_id );
 } //exitOnOff
 
 //_____________________________________________________________________________
 void
 actionOffCount(
     StateMachine * t_state_machine,
-    Event        * t_event ) {
+    SignalEvent *  t_event ) {
 
   (void)t_event;
   TestMachineContext * context =
@@ -206,7 +231,7 @@ actionOffCount(
   printf(
       "%-10s (Event: %2d) action_off_count / tm_context.m_counter++ == %d\n",
       t_state_machine->m_current_state->m_name,
-      t_event->m_id,
+      t_event->m_signal_id,
       context->m_counter );
 } //actionOffCount
 
@@ -214,7 +239,7 @@ actionOffCount(
 bool
 actionOffCountGuard(
     StateMachine * t_state_machine,
-    Event        * t_event ) {
+    SignalEvent *  t_event ) {
 
   (void)t_state_machine;
   (void)t_event;
@@ -226,10 +251,10 @@ actionOffCountGuard(
 void
 effectStart(
     StateMachine * t_state_machine,
-    Event        * t_event ) {
+    SignalEvent *  t_event ) {
 
   printf(
       "Starte die StateMachine \"%s\" mit dem Event Nr. %d.\n",
       t_state_machine->m_name,
-      t_event->m_id );
+      t_event->m_signal_id );
 } //effectStart

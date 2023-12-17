@@ -5,16 +5,33 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //Typ-Deklarationen
+
+typedef enum {
+  EVENT_TYPE_BASE = 0,
+  EVENT_TYPE_CHANGE,
+  EVENT_TYPE_SIGNAL
+} EventType;
 
 typedef enum {
   STATE_TYPE_BASE = 0,
   STATE_TYPE_SIMPLE,
-  STATE_TYPE_COMPOSITE
+  STATE_TYPE_COMPOSITE,
+  STATE_TYPE_EXIT_POINT
 } StateType;
 
 struct SEvent;
 typedef struct SEvent Event;
+
+struct SChangeEvent;
+typedef struct SChangeEvent ChangeEvent;
+
+struct SSignalEvent;
+typedef struct SSignalEvent SignalEvent;
 
 struct SAction;
 typedef struct SAction Action;
@@ -28,6 +45,12 @@ typedef struct SState State;
 struct SSimpleState;
 typedef struct SSimpleState SimpleState;
 
+struct SCompositeState;
+typedef struct SCompositeState CompositeState;
+
+struct SExitPoint;
+typedef struct SExitPoint ExitPoint;
+
 struct SStateMachine;
 typedef struct SStateMachine StateMachine;
 
@@ -36,32 +59,46 @@ typedef struct SStateMachine StateMachine;
 typedef void
 (*ActionHandler)(
     StateMachine * t_state_machine,
-    Event        * t_event );
+    SignalEvent  * t_event );
+
+typedef bool
+(*Condition)(
+    StateMachine * t_state_machine );
 
 typedef void
 (*Effect)(
     StateMachine * t_state_machine,
-    Event        * t_event );
+    SignalEvent  * t_event );
 
 typedef bool
 (*Guard)(
     StateMachine * t_state_machine,
-    Event        * t_event );
+    SignalEvent  * t_event );
 
 struct SEvent {
-  int    m_id;
+  int m_type_id;
+};
+
+struct SChangeEvent {
+  int       m_type_id;
+  Condition m_condition;
+};
+
+struct SSignalEvent {
+  int    m_type_id;
+  int    m_signal_id;
   void * m_data;
   int    m_data_size;
 };
 
 struct SAction {
-  int           m_event_id;
+  Event *       m_event;
   Guard         m_guard;
   ActionHandler m_action_handler;
 };
 
 struct STransition {
-  int      m_event_id;
+  Event  * m_event;
   State  * m_target_state;
   Guard    m_guard;
   Effect   m_effect;
@@ -82,13 +119,25 @@ struct SSimpleState {
   Transition **      m_transitions;
 };
 
+struct SCompositeState {
+  const char * const m_name;
+  int                m_type_id;
+  StateMachine **    m_state_machines;
+};
+
+struct SExitPoint {
+  const char * const m_name;
+  int                m_type_id;
+
+};
+
 struct SStateMachine {
   const char * const m_name;
   bool               m_accepted;
+  StateMachine *     m_parent;
   void *             m_context;
   State *            m_current_state;
   Transition         m_initial_transition;
-  State **           m_states;
 };
 
 //Funktions-Deklarationen
@@ -96,6 +145,10 @@ struct SStateMachine {
 void
 processStateMachine(
     StateMachine * t_state_machine,
-    Event        * t_event );
+    SignalEvent  * t_event );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //AUTOMAT_H_AN_20231125
