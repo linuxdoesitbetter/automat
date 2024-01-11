@@ -1,11 +1,15 @@
 #include "automat.h"
 #include <stdio.h>
 
+#define CONTEXT ((TestMachineContext*)(t_context))
+
 enum EventId {
   EV_NONE,
   EV_SWITCH,
   EV_COUNT
 };
+
+extern StateMachine state_machine;
 
 SignalEvent switch_event = {
   .m_type_id   = EVENT_TYPE_SIGNAL,
@@ -26,49 +30,51 @@ Event start_event = {
 };
 
 typedef struct STestMachineContext {
-  int m_counter;
+  const StateMachine * const m_state_machine;
+  int                        m_counter;
 } TestMachineContext;
 
 void
 effectStart(
-    StateMachine * t_state_machine,
-    SignalEvent *  t_event );
+    SignalEvent * t_event,
+    void *        t_context );
 
 void
 entryOff(
-    StateMachine * t_state_machine,
-    SignalEvent *  t_event );
+    SignalEvent * t_event,
+    void *        t_context );
 
 void
 entryOn(
-    StateMachine * t_state_machine,
-    SignalEvent *  t_event );
+    SignalEvent * t_event,
+    void *        t_context);
 
 void
 doOnOff(
-    StateMachine * t_state_machine,
-    SignalEvent *  t_event );
+    SignalEvent * t_event,
+    void *        t_context);
 
 void
 exitOnOff(
-    StateMachine * t_state_machine,
-    SignalEvent *  t_event );
+    SignalEvent * t_event,
+    void *        t_context );
 
 void
 actionOffCount(
-    StateMachine * t_state_machine,
-    SignalEvent *  t_event );
+    SignalEvent * t_event,
+    void *        t_context );
 
 bool
 actionOffCountGuard(
-    StateMachine * t_state_machine,
-    SignalEvent *  t_event );
+    SignalEvent * t_event,
+    void *        t_context );
 
 SimpleState state_on;
 SimpleState state_off;
 
 TestMachineContext tm_context = {
-  .m_counter = 0
+  .m_state_machine = &state_machine,
+  .m_counter       = 0
 };
 
 Action action_off_count = {
@@ -94,6 +100,7 @@ Transition transition_on_off = {
 SimpleState state_off = {
   .m_name        = "State Off",
   .m_type_id     = STATE_TYPE_SIMPLE,
+  .m_parent      = &state_machine,
   .m_entry       = entryOff,
   .m_do          = doOnOff,
   .m_exit        = exitOnOff,
@@ -109,6 +116,7 @@ SimpleState state_off = {
 SimpleState state_on = {
   .m_name        = "State On",
   .m_type_id     = STATE_TYPE_SIMPLE,
+  .m_parent      = &state_machine,
   .m_entry       = entryOn,
   .m_do          = doOnOff,
   .m_exit        = exitOnOff,
@@ -172,65 +180,65 @@ main(
 //_____________________________________________________________________________
 void
 entryOff(
-    StateMachine * t_state_machine,
-    SignalEvent *  t_event ) {
+    SignalEvent * t_event,
+    void *        t_context ) {
 
   printf(
       "%-10s (Event: %2d) entry / switch off\n",
-      t_state_machine->m_current_state->m_name,
+      CONTEXT->m_state_machine->m_current_state->m_name,
       t_event->m_signal_id );
 } //entryOff
 
 //_____________________________________________________________________________
 void
 entryOn(
-    StateMachine * t_state_machine,
-    SignalEvent *  t_event ) {
+    SignalEvent * t_event,
+    void *        t_context ) {
 
   printf(
       "%-10s (Event: %2d) entry / switch on\n",
-      t_state_machine->m_current_state->m_name,
+      CONTEXT->m_state_machine->m_current_state->m_name,
       t_event->m_signal_id );
 } //entryOn
 
 //_____________________________________________________________________________
 void
 doOnOff(
-    StateMachine * t_state_machine,
-    SignalEvent *  t_event ) {
+    SignalEvent * t_event,
+    void *        t_context ) {
 
   printf(
       "%-10s (Event: %2d) do    /\n",
-      t_state_machine->m_current_state->m_name,
+      CONTEXT->m_state_machine->m_current_state->m_name,
       t_event->m_signal_id );
 } //doOnOff
 
 //_____________________________________________________________________________
 void
 exitOnOff(
-    StateMachine * t_state_machine,
-    SignalEvent *  t_event ) {
+    SignalEvent * t_event,
+    void *        t_context ) {
 
   printf(
       "%-10s (Event: %2d) exit  / \n",
-      t_state_machine->m_current_state->m_name,
+      CONTEXT->m_state_machine->m_current_state->m_name,
       t_event->m_signal_id );
 } //exitOnOff
 
 //_____________________________________________________________________________
 void
 actionOffCount(
-    StateMachine * t_state_machine,
-    SignalEvent *  t_event ) {
+    SignalEvent * t_event,
+    void *        t_context ) {
 
   (void)t_event;
   TestMachineContext * context =
-      (TestMachineContext *)t_state_machine->m_context;
+      CONTEXT->m_state_machine->m_context;
 
   context->m_counter++;
   printf(
       "%-10s (Event: %2d) action_off_count / tm_context.m_counter++ == %d\n",
-      t_state_machine->m_current_state->m_name,
+      CONTEXT->m_state_machine->m_current_state->m_name,
       t_event->m_signal_id,
       context->m_counter );
 } //actionOffCount
@@ -238,11 +246,11 @@ actionOffCount(
 //_____________________________________________________________________________
 bool
 actionOffCountGuard(
-    StateMachine * t_state_machine,
-    SignalEvent *  t_event ) {
+    SignalEvent * t_event,
+    void *        t_context ) {
 
-  (void)t_state_machine;
   (void)t_event;
+  (void)t_context;
 
   return true;
 } //actionOffCountGurad
@@ -250,11 +258,11 @@ actionOffCountGuard(
 //_____________________________________________________________________________
 void
 effectStart(
-    StateMachine * t_state_machine,
-    SignalEvent *  t_event ) {
+    SignalEvent * t_event,
+    void *        t_context ) {
 
   printf(
       "Starte die StateMachine \"%s\" mit dem Event Nr. %d.\n",
-      t_state_machine->m_name,
+      CONTEXT->m_state_machine->m_name,
       t_event->m_signal_id );
 } //effectStart

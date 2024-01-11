@@ -58,22 +58,22 @@ typedef struct SStateMachine StateMachine;
 
 typedef void
 (*ActionHandler)(
-    StateMachine * t_state_machine,
-    SignalEvent  * t_event );
+    SignalEvent * t_event,
+    void *        t_context );
 
 typedef bool
 (*Condition)(
-    StateMachine * t_state_machine );
+    void * t_context );
 
 typedef void
 (*Effect)(
-    StateMachine * t_state_machine,
-    SignalEvent  * t_event );
+    SignalEvent * t_event,
+    void *        t_context );
 
 typedef bool
 (*Guard)(
-    StateMachine * t_state_machine,
-    SignalEvent  * t_event );
+    SignalEvent * t_event,
+    void *        t_context );
 
 struct SEvent {
   int m_type_id;
@@ -98,20 +98,22 @@ struct SAction {
 };
 
 struct STransition {
-  Event  * m_event;
-  State  * m_target_state;
-  Guard    m_guard;
-  Effect   m_effect;
+  Event * m_event;
+  State * m_target_state;
+  Guard   m_guard;
+  Effect  m_effect;
 };
 
 struct SState {
   const char * const m_name;
   int                m_type_id;
+  StateMachine *     m_parent;
 };
 
 struct SSimpleState {
   const char * const m_name;
   int                m_type_id;
+  StateMachine *     m_parent;
   ActionHandler      m_entry;
   ActionHandler      m_do;
   ActionHandler      m_exit;
@@ -122,13 +124,15 @@ struct SSimpleState {
 struct SCompositeState {
   const char * const m_name;
   int                m_type_id;
+  StateMachine *     m_parent;
   StateMachine **    m_state_machines;
 };
 
 struct SExitPoint {
   const char * const m_name;
   int                m_type_id;
-
+  StateMachine *     m_parent;
+  State *            m_target_state;
 };
 
 struct SStateMachine {
