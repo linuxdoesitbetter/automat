@@ -19,6 +19,11 @@ processCompositeState(
     SignalEvent *    t_event );
 
 static inline void
+processEntryPoint(
+    EntryPoint *  t_entry_point,
+    SignalEvent * t_event );
+
+static inline void
 processExitPoint(
     ExitPoint *   t_exit_point,
     SignalEvent * t_event );
@@ -182,6 +187,11 @@ processTransition(
       break;
     case STATE_TYPE_COMPOSITE:
       break;
+    case  STATE_TYPE_ENTRY_POINT:
+      processEntryPoint(
+          (EntryPoint*)state_machine->m_current_state,
+          t_event );
+      break;
     case STATE_TYPE_EXIT_POINT:
       processExitPoint(
           (ExitPoint*)state_machine->m_current_state,
@@ -269,7 +279,41 @@ processCompositeState(
   }
 } //processCompositeState
 
-//processExitPoint_____________________________________________________________
+//_____________________________________________________________________________
+static inline void
+processEntryPoint(
+    EntryPoint *  t_entry_point,
+    SignalEvent * t_event ) {
+
+  if (    t_entry_point
+       && t_entry_point->m_parent
+       && t_entry_point->m_local_target
+       && t_entry_point->m_target_state
+       && t_entry_point->m_target_state->m_parent ) {
+
+    t_entry_point->m_parent->m_current_state =
+        (State*)t_entry_point->m_local_target;
+
+    t_entry_point->m_target_state->m_parent->m_current_state =
+        t_entry_point->m_target_state;
+
+    switch ( t_entry_point->m_target_state->m_type_id ) {
+    case STATE_TYPE_SIMPLE:
+      if ( ((SimpleState*)t_entry_point->m_target_state)->m_entry ) {
+
+        SimpleState * target = (SimpleState*)t_entry_point->m_target_state;
+        target->m_entry( t_event, target->m_parent->m_context );
+      }
+      break;
+    case STATE_TYPE_COMPOSITE:
+      break;
+    default:
+      break;
+    }
+  }
+} //processEntryPoint
+
+//_____________________________________________________________________________
 static inline void
 processExitPoint(
     ExitPoint *   t_exit_point,

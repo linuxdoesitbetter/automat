@@ -21,6 +21,7 @@ typedef enum {
   STATE_TYPE_BASE = 0,
   STATE_TYPE_SIMPLE,
   STATE_TYPE_COMPOSITE,
+  STATE_TYPE_ENTRY_POINT,
   STATE_TYPE_EXIT_POINT
 } StateType;
 
@@ -47,6 +48,9 @@ typedef struct SSimpleState SimpleState;
 
 struct SCompositeState;
 typedef struct SCompositeState CompositeState;
+
+struct SEntryPoint;
+typedef struct SEntryPoint EntryPoint; 
 
 struct SExitPoint;
 typedef struct SExitPoint ExitPoint;
@@ -126,6 +130,14 @@ struct SCompositeState {
   int                m_type_id;
   StateMachine *     m_parent;
   StateMachine **    m_state_machines;
+};
+
+struct SEntryPoint {
+  const char * const m_name;
+  int                m_type_id;
+  StateMachine *     m_parent;
+  CompositeState *   m_local_target;
+  State *            m_target_state;
 };
 
 struct SExitPoint {
