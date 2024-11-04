@@ -34,8 +34,8 @@ typedef struct SChangeEvent ChangeEvent;
 struct SSignalEvent;
 typedef struct SSignalEvent SignalEvent;
 
-struct SAction;
-typedef struct SAction Action;
+struct SActivity;
+typedef struct SActivity Action;
 
 struct STransition;
 typedef struct STransition Transition;
@@ -95,7 +95,7 @@ struct SSignalEvent {
   int    m_data_size;
 };
 
-struct SAction {
+struct SActivity {
   Event *       m_event;
   Guard         m_guard;
   ActionHandler m_action_handler;

@@ -13,6 +13,48 @@ Linker:: -lautomat
 
 === Typen
 
+==== EventType
+Definition::
++
+[source,c]
+-----
+typedef enum {
+  EVENT_TYPE_BASE = 0,
+  EVENT_TYPE_CHANGE,
+  EVENT_TYPE_SIGNAL
+} EventType;
+-----
+
+Beschreibung::
+Die Bibliothek unterscheidet zwei Arten von Events. Signal-Events informieren
+die Statemachine über das Eintreten von Ereignissen, deren Quelle meist
+außerhalb der Statemachine liegt. Beispiele sind Timer-Events, Tastatur- oder
+Drehencoder-Events. Signal-Events können zusätzliche Event-spezifische Daten
+enthalten. Change-Events überwachen eine auslösende Bedingung. Z. B. wenn eine
+Variable einen bestimmten Wertebereich be-, unter- oder überschreitet.
+
+==== StateType
+Definition::
++
+[source,c]
+-----
+typedef enum {
+  STATE_TYPE_BASE = 0,
+  STATE_TYPE_SIMPLE,
+  STATE_TYPE_COMPOSITE,
+  STATE_TYPE_ENTRY_POINT,
+  STATE_TYPE_EXIT_POINT
+} StateType;
+-----
+
+Beschreibung::
+Es wird werden verschiedene Typen von Zuständen unterschieden.
+Der Simple-State ist ein -im Sinne dieser Bibliothek- atomarer Zustand. Er
+kann Aktivitäten und Transitionen enthalten. Ein Composite-State ist ein
+zusammengesetzter Zustand. Er enthält ein oder mehrere Unter-Automaten.
+Entry- und Exit-Points sind Pseudozustände die für Transitionen zwischen
+Zuständen verschiedener Automaten benötigt werden.
+
 ==== Event
 Definition::
 +
