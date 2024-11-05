@@ -20,12 +20,20 @@ definieren.
  |<<EventType>>
  |<<StateType>>
 h|Funktionszeiger
- | <<Action>>
- | <<Condition>>
- | <<Effect>>
- | <<Guard>>
+ |<<Action>>
+ |<<Condition>>
+ |<<Effect>>
+ |<<Guard>>
 h|Strukturen
  |<<Event>>
+ |<<ChangeEvent>>
+ |<<SignalEvent>>
+ |<<Activity>>
+ |<<Transition>>
+ |<<State>>
+ |<<SimpleState>>
+ |<<CompositeState>>
+ |<<EntryPoint>>
 h|Methoden
 |====================
 
@@ -50,6 +58,7 @@ Drehencoder-Events. Signal-Events können zusätzliche Event-spezifische Daten
 enthalten. Change-Events überwachen eine auslösende Bedingung. Z. B. wenn eine
 Variable einen bestimmten Wertebereich be-, unter- oder überschreitet.
 
+//______________________________________________________________________________
 
 ==== StateType
 Definition::
@@ -72,6 +81,7 @@ zusammengesetzter Zustand. Er enthält ein oder mehrere Unter-Automaten.
 Entry- und Exit-Points sind Pseudozustände die für Transitionen zwischen
 Zuständen verschiedener Automaten benötigt werden.
 
+//______________________________________________________________________________
 
 ==== Action
 Definition::
@@ -89,6 +99,7 @@ wird im Parameter `t_event` übergeben und kann in der Aktion ausgewertet oder
 verarbeitet werden. Mit dem Parameter `t_context` wird der Kontext des Automaten
 übergeben.
 
+//______________________________________________________________________________
 
 ==== Condition
 Definition::
@@ -104,6 +115,7 @@ Eine Bedingung ist das Entscheidungskriterium für das Auslösenen eines
 Change-Events. Mit dem Parameter `t_context` wird der Kontext des Automaten
 übergeben.
 
+//______________________________________________________________________________
 
 ==== Effect
 Definition::
@@ -121,6 +133,7 @@ werden kann. Das auslösende Event wird im Parameter `t_event` übergeben und
 kann im Effekt ausgewertet oder verarbeitet werden. Mit dem Parameter
 `t_context` wird der Kontext des Automaten übergeben.
 
+//______________________________________________________________________________
 
 ==== Guard
 Definition::
@@ -133,49 +146,221 @@ typedef bool
     void *        t_context );
 -----
 Beschreibung::
-Ein Guard ist eine einschränkende Bedingung, mit der eine Transition unterdrückt
-werden kann. Das auslösende Event wird im Parameter `t_event` übergeben und
-kann im Guard ausgewertet oder verarbeitet werden. Mit dem Parameter `t_context`
-wird der Kontext des Automaten übergeben.
+Ein Guard ist eine einschränkende Bedingung, mit der eine Transition oder eine
+Aktivität unterdrückt werden kann. Das auslösende Event wird im Parameter
+`t_event` übergeben und kann im Guard ausgewertet oder verarbeitet werden. Mit
+dem Parameter `t_context` wird der Kontext des Automaten übergeben.
+
+//______________________________________________________________________________
 
 ==== Event
 Definition::
 +
 [source,c]
-----
+-----
 struct SEvent {
-  int    m_id;
+  EventType m_type_id;
 };
 
 typedef struct SEvent Event;
-----
-
+-----
 Beschreibung::
-bla
+Dieser Typ ist eine Art Basisklasse für die Typen `SignalEvent` und
+`ChangeEvent`. Zeiger dieses Typs werden verwendet um anhand des Members
+m_type_id auf den passenden Typ zu casten.
+
+//______________________________________________________________________________
+
+==== ChangeEvent
+Definition::
++
+[source,c]
+-----
+struct SChangeEvent {
+  EventType m_type_id;      //obligatorisch ≙ EVENT_TYPE_CHANGE
+  Condition m_condition;    //obligatorisch
+};
+
+typedef struct SChangeEvent ChangeEvent;
+-----
+Beschreibung::
+Siehe auch: <<EventType>> und <<Condition>>
+
+//______________________________________________________________________________
+
+==== SignalEvent
+Definition::
++
+[source,c]
+-----
+struct SSignalEvent {
+  EventType m_type_id;      //obligatorisch ≙ EVENT_TYPE_SIGNAL
+  int       m_signal_id;    //obligatorisch
+  void *    m_data;         //optional
+  int       m_data_size;    //optional
+};
+
+typedef struct SSignalEvent SignalEvent;
+-----
+Beschreibung::
+Der Member `m_signal_id` trägt eine anwendungsspezifische Event-id mit der das
+eingetretene Ereignis spezifiziert wird. Optional können dem Event über die
+Member `m_data` und `m_data_size` auch Daten mitgegeben werden.
++
+Siehe auch: <<EventType>>
+
+//______________________________________________________________________________
 
 ==== Activity
 Definiton::
 +
 [source,c]
-----
+-----
 struct SActivity {
-  Event *  m_event;
-  Guard    m_guard;
-  Action   m_action;
+  Event *  m_event;     //obligatorisch
+  Guard    m_guard;     //optional
+  Action   m_action;    //obligatorisch
 };
 
 typedef struct SActivity Activity;
-----
-
+-----
 Beschreibung::
-+
-Mithilfe dieses Typs werden Aktionen in einem Zustand definiert. Aktionen
+Mithilfe dieses Typs werden Aktivitäten in einem Zustand definiert. Aktivitäten
 werden als Reaktion auf ein Event ausgeführt, führen aber im Gegensatz zu
 Transitionen nicht zum Verlassen des aktuellen Zustands.
 +
-Der Member `m_event_id` gibt an, auf welchen Event-Typ reagiert werden soll.
-Mit dem Member `m_guard` kann ein Guard hinterlegt werden, mit dem entschieden
-werden kann, ob der ActionHandler tatsächlich aufzurufen ist. Wird `m_guard` mit
-`NULL` initialisiert, wird der ActionHandler bei jedem Event mit passendem Typ
-ausgeführt. Der ActionHandler `m_action_handler` repräsentiert die auszuführende
-Funktion.
+Mit `m_event` wird das auslösende Ereignis angegeben. Über `m_guard` kann die
+Ausführung von `m_action` unterdrückt werden.
++
+Siehe auch: <<Event>>, <<Guard>>, <<Action>>
+
+//______________________________________________________________________________
+
+==== Transition
+Definition::
++
+[source,c]
+-----
+struct STransition {
+  Event * m_event;         //obligatorisch
+  State * m_target_state;  //obligatorisch
+  Guard   m_guard;         //optional
+  Effect  m_effect;        //optional
+};
+
+typedef struct STransition Transition;
+-----
+Beschreibung::
+Mit diesem Typ werden Zustandsübergänge definiert. Mit `m_event` wird das
+auslösende Event spezifiziert. Der Member `m_target_state` gibt den Folgezustand
+an. Optional kann mit `m_guard` kann die Transition unterdrückt werden. Mit
+`m_effect` kann man Code angeben, der beim Zustandswechsel ausgeführt wird.
++
+Siehe auch: <<Event>>, <<State>>, <<Guard>>, <<Effect>>
+
+//______________________________________________________________________________
+
+==== State
+Definition::
++
+[source,c]
+-----
+struct SState {
+  const char * const m_name;
+  int                m_type_id;
+  StateMachine *     m_parent;
+};
+
+typedef struct SState State;
+-----
+Beschreibung::
+Dieser Typ ist eine Art Basisklasse für die Typen `SimpleState`,
+`CompositeState`, `EntryPoint` und `ExitPoint`. Zeiger dieses Typs werden
+überall verwendet, wo ein Zustand erwartet wird. Die Member werden nur in den
+speziellen Zuständen verwendet und haben dort die im Folgenden beschriebene
+Bedeutung. Mit `m_name` kann man dem Zustand einen sprechenden (und
+sinnvollerweise eindeutigen) Namen geben, der beim Debuggen des Automaten
+hilfreich ist. Der Member `m_type_id` ist auf den speziellen Typ der
+"abgeleiteten Klasse" zu setzen, damit später beim Verwenden von
+"Basisklassenzeigern" (`State*`) korrekt zurückgecastet werden kann. Mit
+`m_parent` wird auf den Automaten verwiesen, dem der Zustand angehört. Dies ist
+wichtig, weil die `StateMachine` keine Liste der enthaltenen Zustände besitzt. 
++
+Siehe auch: <<StateType>>
+
+//______________________________________________________________________________
+
+==== SimpleState
+Definition::
++
+[source,c]
+-----
+struct SSimpleState {
+  const char * const m_name;           //optional
+  int                m_type_id;        //obligatorisch ≙ STATE_TYPE_SIMPLE
+  StateMachine *     m_parent;         //obligatorisch
+  Action             m_entry;          //optional
+  Action             m_do;             //optional
+  Action             m_exit;           //optional
+  Activity **        m_activities;     //optional
+  Transition **      m_transitions;    //optional
+};
+
+typedef struct SSimpleState SimpleState;
+-----
+Beschreibung::
+Dieser Typ beschreibt einen einfachen - also nicht zusammengesetzten - Zustand.
+Über die Member `m_entry`, `m_do` und `m_exit` kann das Verhalten (behavior)
+beim Betreten, Besuch und Verlassen des Zustands angegeben werden. Der Member
+`m_activities` hält ein `NULL`-terminiertes Feld von Aktivitäten. Der Member
+`m_transitions` hält ein  `NULL`-terminierte Feld von Zustandsübergängen.
++
+Siehe auch: <<State>>
+
+//______________________________________________________________________________
+
+==== CompositeState
+Definition::
++
+[source,c]
+-----
+struct SCompositeState {
+  const char * const m_name;              //optional
+  int                m_type_id;           //obligatorisch ≙ STATE_TYPE_COMPOSITE
+  StateMachine *     m_parent;            //obligatorisch
+  StateMachine **    m_state_machines;    //obligatorisch
+};
+
+typedef struct SCompositeState CompositeState;
+-----
+Beschreibung::
+Dieser Typ beschreibt einen zusammengesetzten Zustand, der aus mindestens einem
+Unterautomaten besteht. Der Member `m_state_machines` hält ein `NULL`-
+terminiertes Feld von Unterautomaten.
++
+Siehe auch: <<State>>
+
+//______________________________________________________________________________
+
+==== EntryPoint
+Definition::
++
+[source,c]
+-----
+struct SEntryPoint {
+  const char * const m_name;
+  int                m_type_id;
+  StateMachine *     m_parent;
+  CompositeState *   m_local_target;
+  State *            m_target_state;
+};
+
+typedef struct SEntryPoint EntryPoint;
+-----
+Beschreibung::
+Dieser Typ stellt einen Pseudozustand dar, der verwendet wird, um in einen
+Zustand zu wechseln, der innerhalb eines Unterautomaten liegt. Eine Transition,
+die auf einen `EntryPoint` führt, wird auf den im `EntryPoint` mit
+`m_target_state` angegebenen Zustand weitergeleitet.
+
+//______________________________________________________________________________

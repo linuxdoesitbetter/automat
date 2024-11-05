@@ -80,19 +80,19 @@ typedef bool
     void *        t_context );
 
 struct SEvent {
-  int m_type_id;
+  EventType m_type_id;
 };
 
 struct SChangeEvent {
-  int       m_type_id;
+  EventType m_type_id;
   Condition m_condition;
 };
 
 struct SSignalEvent {
-  int    m_type_id;
-  int    m_signal_id;
-  void * m_data;
-  int    m_data_size;
+  EventType m_type_id;
+  int       m_signal_id;
+  void *    m_data;
+  int       m_data_size;
 };
 
 struct SActivity {
