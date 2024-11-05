@@ -77,7 +77,7 @@ TestMachineContext tm_context = {
   .m_counter       = 0
 };
 
-Action action_off_count = {
+Activity activity_off_count = {
   .m_event          = (Event*)&count_event,
   .m_guard          = actionOffCountGuard,
   .m_action_handler = actionOffCount,
@@ -104,10 +104,9 @@ SimpleState state_off = {
   .m_entry       = entryOff,
   .m_do          = doOnOff,
   .m_exit        = exitOnOff,
-  .m_actions     = (Action*[]){
-      &action_off_count,
-      NULL
-  },
+  .m_activities  = (Activity*[]) {
+      &activity_off_count,
+      NULL },
   .m_transitions = (Transition*[]){
       &transition_off_on,
       NULL }
@@ -120,23 +119,22 @@ SimpleState state_on = {
   .m_entry       = entryOn,
   .m_do          = doOnOff,
   .m_exit        = exitOnOff,
-  .m_actions     = NULL,
-  .m_transitions = (Transition*[]){
-      &transition_on_off,
-      NULL }
+  .m_activities  = NULL,
+  .m_transitions = (Transition*[]) {
+    &transition_on_off,
+    NULL }
 };
 
 StateMachine state_machine = {
   .m_name               = "Test Machine",
   .m_parent             = NULL,
-  .m_accepted           = false,
   .m_context            = &tm_context,
   .m_current_state      = NULL,
   .m_initial_transition = {
-      .m_event          = &start_event,
-      .m_target_state   = (State*)&state_off,
-      .m_guard          = NULL,
-      .m_effect         = effectStart }
+    .m_event          = &start_event,
+    .m_target_state   = (State*)&state_off,
+    .m_guard          = NULL,
+    .m_effect         = effectStart }
 };
 
 //_____________________________________________________________________________
