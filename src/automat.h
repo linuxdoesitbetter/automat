@@ -98,7 +98,7 @@ struct SSignalEvent {
 struct SActivity {
   Event *  m_event;
   Guard    m_guard;
-  Action   m_action_handler;
+  Action   m_action;
 };
 
 struct STransition {

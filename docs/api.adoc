@@ -16,13 +16,18 @@ definieren.
 
 [width="50%",options="header,footer"]
 |====================
-|Aufzählungen  
-|<<EventType>>
-|<<StateType>>
-h| Strukturen
-|<<Event>>
+ |Aufzählungen  
+ |<<EventType>>
+ |<<StateType>>
+h|Funktionszeiger
+ | <<Action>>
+ | <<Condition>>
+ | <<Effect>>
+ | <<Guard>>
+h|Strukturen
+ |<<Event>>
+h|Methoden
 |====================
-
 
 === Typen
 
@@ -37,7 +42,6 @@ typedef enum {
   EVENT_TYPE_SIGNAL
 } EventType;
 -----
-
 Beschreibung::
 Die Bibliothek unterscheidet zwei Arten von Events. Signal-Events informieren
 die Statemachine über das Eintreten von Ereignissen, deren Quelle meist
@@ -45,6 +49,7 @@ außerhalb der Statemachine liegt. Beispiele sind Timer-Events, Tastatur- oder
 Drehencoder-Events. Signal-Events können zusätzliche Event-spezifische Daten
 enthalten. Change-Events überwachen eine auslösende Bedingung. Z. B. wenn eine
 Variable einen bestimmten Wertebereich be-, unter- oder überschreitet.
+
 
 ==== StateType
 Definition::
@@ -59,7 +64,6 @@ typedef enum {
   STATE_TYPE_EXIT_POINT
 } StateType;
 -----
-
 Beschreibung::
 Es wird werden verschiedene Typen von Zuständen unterschieden.
 Der Simple-State ist ein -im Sinne dieser Bibliothek- atomarer Zustand. Er
@@ -68,6 +72,72 @@ zusammengesetzter Zustand. Er enthält ein oder mehrere Unter-Automaten.
 Entry- und Exit-Points sind Pseudozustände die für Transitionen zwischen
 Zuständen verschiedener Automaten benötigt werden.
 
+
+==== Action
+Definition::
++
+[source,c]
+-----
+typedef void
+(*Action)(
+    SignalEvent * t_event,
+    void *        t_context );
+-----
+Beschreibung::
+Eine Aktion ist der auzuführende Code einer Aktivität. Das auslösende Event
+wird im Parameter `t_event` übergeben und kann in der Aktion ausgewertet oder
+verarbeitet werden. Mit dem Parameter `t_context` wird der Kontext des Automaten
+übergeben.
+
+
+==== Condition
+Definition::
++
+[source,c]
+-----
+typedef bool
+(*Condition)(
+    void * t_context );
+-----
+Beschreibung::
+Eine Bedingung ist das Entscheidungskriterium für das Auslösenen eines
+Change-Events. Mit dem Parameter `t_context` wird der Kontext des Automaten
+übergeben.
+
+
+==== Effect
+Definition::
++
+[source,c]
+-----
+typedef void
+(*Effect)(
+    SignalEvent * t_event,
+    void *        t_context );
+-----
+Beschreibung::
+Ein Effekt ist der optionale Code, der während einer Transition ausgeführt
+werden kann. Das auslösende Event wird im Parameter `t_event` übergeben und
+kann im Effekt ausgewertet oder verarbeitet werden. Mit dem Parameter
+`t_context` wird der Kontext des Automaten übergeben.
+
+
+==== Guard
+Definition::
++
+[source,c]
+-----
+typedef bool
+(*Guard)(
+    SignalEvent * t_event,
+    void *        t_context );
+-----
+Beschreibung::
+Ein Guard ist eine einschränkende Bedingung, mit der eine Transition unterdrückt
+werden kann. Das auslösende Event wird im Parameter `t_event` übergeben und
+kann im Guard ausgewertet oder verarbeitet werden. Mit dem Parameter `t_context`
+wird der Kontext des Automaten übergeben.
+
 ==== Event
 Definition::
 +
@@ -75,106 +145,26 @@ Definition::
 ----
 struct SEvent {
   int    m_id;
-  void * m_data;
-  int    m_data_size;
 };
 
 typedef struct SEvent Event;
 ----
 
 Beschreibung::
-Mit der Funktion <<processStateMachine(),`processStateMachine()`>> werden Events
-an die StateMachine übergeben und lösen in der Folge Aktionen und Transitionen
-aus. Der Member `m_id` hält die Event-Identifikatonsnummer, anhand der die
-Events unterschieden werden. Diese Id ist anwendungsspezifisch und soll nur
-positive Werte haben. Über die Member `m_data` und `m_data_size` können den
-Events Daten mitgegeben werden. Die Events werden den Handlern von Aktivitäten,
-Effekten und Guards als Parameter übergegeben. Die Anwendung entscheidet anhand
-der Event-Id, auf welchen Typ `m_data` zu casten ist. Die Größe des Datums ist
-über den Member `m_data_size` mitzugeben. Damit ist es z. B. möglich ein Event
-zu kopieren.
+bla
 
-Beispiel::
-+
-[source,c]
-----
-#include <automat.h>
-
-typedef enum {
-  KEY_EV_DOWN,
-  KEY_EV_SHORT,
-  KEY_EV_LONG,
-  KEY_EV_REPEAT,
-  KEY_EV_UP
-} KeyEvent;
-
-typedef struct {
-  int      m_key;
-  KeyEvent m_event;
-} KeyEventData;
-
-// ...
-
-enum EventId{
-  EV_TIME_10_MS,
-  EV_KEY,
-  EV_JOYSTICK,
-  EV_ENCODER,
-  EV_OVER_VOLTAGE,
-  EV_POWER_FAIL
-};
-
-extern StateMachine sm_process_control;
-
-KeyEventData q_short_press {
-  .m_key   = 'q',
-  .m_event = KEY_EV_SHORT
-};
-
-Event key_q_short_press = {
-  .m_id        = EV_KEY,
-  .m_data      = &q_short_press,
-  .m_data_size = sizeof( KeyEventData )
-};
-
-processStateMachine( &sm_process_control, &key_q_short_press );
-
-// ...
-
-//_____________________________________________________________________________
-void
-action_menu_input(
-    StateMachine * t_state_machine,
-    Event        * t_event ) {
-
-  (void)t_state_machine;
-
-  if ( EV_KEY == t_event->m_id ) {
-
-    KeyEventData * key_event_data = (KeyEventData*)t_event->m_data;
-
-    if (    ('q'          == key_event_data->m_key)
-         && (KEY_EV_SHORT == key_event_data->m_event) ) {
-
-      // ...
-    }
-  }
-} //action_menu_input
-
-----
-
-==== Action
+==== Activity
 Definiton::
 +
 [source,c]
 ----
-struct SAction {
-  int           m_event_id;
-  Guard         m_guard;
-  ActionHandler m_action_handler;
+struct SActivity {
+  Event *  m_event;
+  Guard    m_guard;
+  Action   m_action;
 };
 
-typedef struct SAction Action;
+typedef struct SActivity Activity;
 ----
 
 Beschreibung::

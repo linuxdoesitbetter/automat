@@ -78,9 +78,9 @@ TestMachineContext tm_context = {
 };
 
 Activity activity_off_count = {
-  .m_event          = (Event*)&count_event,
-  .m_guard          = actionOffCountGuard,
-  .m_action_handler = actionOffCount,
+  .m_event  = (Event*)&count_event,
+  .m_guard  = actionOffCountGuard,
+  .m_action = actionOffCount,
 };
 
 Transition transition_off_on = {

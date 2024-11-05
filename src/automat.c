@@ -242,7 +242,7 @@ processActivities(
 
     while ( *activity ) {
 
-      if ( (*activity)->m_action_handler ) {
+      if ( (*activity)->m_action ) {
 
         bool triggers = eventTriggers(
             (*activity)->m_event,
@@ -252,7 +252,7 @@ processActivities(
 
         if ( triggers ) {
 
-          (*activity)->m_action_handler( t_event, t_context );
+          (*activity)->m_action( t_event, t_context );
         }
       }
 
