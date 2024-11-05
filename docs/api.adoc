@@ -11,6 +11,17 @@ Bibliothek:: libautomat
 
 Linker:: -lautomat
 
+
+[width="50%",options="header,footer"]
+|====================
+|Aufzählungen  
+|<<EventType>>
+|<<StateType>>
+h| Strukturen
+|<<Event>>
+|====================
+
+
 === Typen
 
 ==== EventType

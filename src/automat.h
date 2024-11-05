@@ -35,7 +35,7 @@ struct SSignalEvent;
 typedef struct SSignalEvent SignalEvent;
 
 struct SActivity;
-typedef struct SActivity Action;
+typedef struct SActivity Activity;
 
 struct STransition;
 typedef struct STransition Transition;
@@ -121,7 +121,7 @@ struct SSimpleState {
   ActionHandler      m_entry;
   ActionHandler      m_do;
   ActionHandler      m_exit;
-  Action **          m_actions;
+  Activity **        m_activities;
   Transition **      m_transitions;
 };
 

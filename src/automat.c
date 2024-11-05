@@ -231,35 +231,35 @@ processTransitions(
 
 //_____________________________________________________________________________
 static inline void
-processActions(
+processActivities(
     SimpleState * t_current_state,
     SignalEvent * t_event,
     void *        t_context ) {
 
-  Action ** action = t_current_state->m_actions;
+  Activity ** activity = t_current_state->m_activities;
 
-  if ( action ) {
+  if ( activity ) {
 
-    while ( *action ) {
+    while ( *activity ) {
 
-      if ( (*action)->m_action_handler ) {
+      if ( (*activity)->m_action_handler ) {
 
         bool triggers = eventTriggers(
-            (*action)->m_event,
-            (*action)->m_guard,
+            (*activity)->m_event,
+            (*activity)->m_guard,
             t_event,
             t_context );
 
         if ( triggers ) {
 
-          (*action)->m_action_handler( t_event, t_context );
+          (*activity)->m_action_handler( t_event, t_context );
         }
       }
 
-      action++;
+      activity++;
     }
   }
-} //processActions
+} //processActivities
 
 //_____________________________________________________________________________
 static inline void
@@ -357,6 +357,6 @@ processSimpleState(
     t_current_state->m_do( t_event, context );
   }
 
-  processActions( t_current_state, t_event, context );
+  processActivities( t_current_state, t_event, context );
   processTransitions( t_current_state, t_event );  
 } //processSimpleState
