@@ -61,7 +61,7 @@ typedef struct SStateMachine StateMachine;
 //Typ-Definitionen
 
 typedef void
-(*ActionHandler)(
+(*Action)(
     SignalEvent * t_event,
     void *        t_context );
 
@@ -96,9 +96,9 @@ struct SSignalEvent {
 };
 
 struct SActivity {
-  Event *       m_event;
-  Guard         m_guard;
-  ActionHandler m_action_handler;
+  Event *  m_event;
+  Guard    m_guard;
+  Action   m_action_handler;
 };
 
 struct STransition {
@@ -118,9 +118,9 @@ struct SSimpleState {
   const char * const m_name;
   int                m_type_id;
   StateMachine *     m_parent;
-  ActionHandler      m_entry;
-  ActionHandler      m_do;
-  ActionHandler      m_exit;
+  Action             m_entry;
+  Action             m_do;
+  Action             m_exit;
   Activity **        m_activities;
   Transition **      m_transitions;
 };

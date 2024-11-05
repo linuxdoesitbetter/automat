@@ -11,6 +11,8 @@ Bibliothek:: libautomat
 
 Linker:: -lautomat
 
+Diese Bibliothek bietet die Möglichkeit, Automaten UML-nah statisch zu
+definieren.
 
 [width="50%",options="header,footer"]
 |====================
@@ -86,7 +88,7 @@ an die StateMachine übergeben und lösen in der Folge Aktionen und Transitionen
 aus. Der Member `m_id` hält die Event-Identifikatonsnummer, anhand der die
 Events unterschieden werden. Diese Id ist anwendungsspezifisch und soll nur
 positive Werte haben. Über die Member `m_data` und `m_data_size` können den
-Events Daten mitgegeben werden. Die Events werden den Handlern von Aktionen,
+Events Daten mitgegeben werden. Die Events werden den Handlern von Aktivitäten,
 Effekten und Guards als Parameter übergegeben. Die Anwendung entscheidet anhand
 der Event-Id, auf welchen Typ `m_data` zu casten ist. Die Größe des Datums ist
 über den Member `m_data_size` mitzugeben. Damit ist es z. B. möglich ein Event
