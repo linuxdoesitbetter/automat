@@ -127,7 +127,6 @@ SimpleState state_on = {
 
 StateMachine state_machine = {
   .m_name               = "Test Machine",
-  .m_parent             = NULL,
   .m_context            = &tm_context,
   .m_current_state      = NULL,
   .m_initial_transition = {

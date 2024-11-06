@@ -8,7 +8,7 @@
 :toclevels: 5
 :sectnums:
 :multipage-level: 1
-:imagesdir: ./imagesdir
+:imagesdir: imagesdir
 :important-caption: ⚠ WICHTIG
 :source-highlighter: rouge
 

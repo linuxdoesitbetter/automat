@@ -34,7 +34,10 @@ h|Strukturen
  |<<SimpleState>>
  |<<CompositeState>>
  |<<EntryPoint>>
+ |<<ExitPoint>>
+ |<<StateMachine>>
 h|Methoden
+ |<<processStateMachine()>>
 |====================
 
 === Typen
@@ -338,7 +341,7 @@ Dieser Typ beschreibt einen zusammengesetzten Zustand, der aus mindestens einem
 Unterautomaten besteht. Der Member `m_state_machines` hält ein `NULL`-
 terminiertes Feld von Unterautomaten.
 +
-Siehe auch: <<State>>
+Siehe auch: <<State>>, <<StateType>>
 
 //______________________________________________________________________________
 
@@ -348,19 +351,147 @@ Definition::
 [source,c]
 -----
 struct SEntryPoint {
-  const char * const m_name;
-  int                m_type_id;
-  StateMachine *     m_parent;
-  CompositeState *   m_local_target;
-  State *            m_target_state;
+  const char * const m_name;            //optional
+  int                m_type_id;         //obligatorisch ≙ STATE_TYPE_ENTRY_POINT
+  StateMachine *     m_parent;          //obligatorisch
+  CompositeState *   m_local_target;    //obligatorisch
+  State *            m_target_state;    //obligatorisch
 };
 
 typedef struct SEntryPoint EntryPoint;
 -----
 Beschreibung::
 Dieser Typ stellt einen Pseudozustand dar, der verwendet wird, um in einen
-Zustand zu wechseln, der innerhalb eines Unterautomaten liegt. Eine Transition,
-die auf einen `EntryPoint` führt, wird auf den im `EntryPoint` mit
-`m_target_state` angegebenen Zustand weitergeleitet.
+Zustand zu wechseln, der innerhalb eines Unterautomaten liegt. Der `EntryPoint`
+hat den gleichen Elternautomaten, wie der Ursprungszustand der Transition. Eine
+Transition, die auf einen `EntryPoint` führt (1), wird auf den im `EntryPoint`
+mit `m_target_state` angegebenen Zustand weitergeleitet (2). Mit dem Member
+`m_local_target` wird der lokale (Composite-)State angeben (3), der den
+Unterautomaten enthält und während der Transition zum aktiven Zustand des
+Eltern-Automaten wird. Innerhalb des Unterautomaten wird der Zielzustand zum
+aktiven Zustand.
++
+image::EntryPoint.png["EntryPoint"]
++
+Siehe auch: <<ExitPoint>>, <<State>>, <<StateType>>
+
+//______________________________________________________________________________
+
+==== ExitPoint
+Definition::
++
+[source,c]
+-----
+struct SExitPoint {
+  const char * const m_name;            //optional
+  int                m_type_id;         //obligatorisch ≙ STATE_TYPE_EXIT_POINT
+  StateMachine *     m_parent;          //obligatorisch
+  State *            m_target_state;    //obligatorisch
+};
+
+typedef struct SExitPoint ExitPoint;
+-----
+Beschreibung::
+Dieser Typ stellt einen Pseudozustand dar, der verwendet wird, um aus einem
+Zustand eines Unterautomaten in einen Zustand eines übergeordneten Automaten zu
+wechseln. Der Elternautomat `m_parent` des ExitPoints ist der zu verlassende
+Unterautomat. Beim Verlassen des Unterautomaten wird der Zeiger auf den aktiven
+Zustand des Unterautomaten auf `NULL` gesetzt, damit er beim nächsten Betreten
+mit seiner regulären Start-Transition beginnt. Im übergeordneten Automaten wird
+der Zielzustand `m_target_state` zum aktiven Zustand.
++
+Siehe auch: <<EntryPoint>>, <<State>>, <<StateType>>
+
+//______________________________________________________________________________
+
+==== StateMachine
+Definition::
++
+[source,c]
+-----
+struct SStateMachine {
+  const char * const m_name;
+  void *             m_context;
+  State *            m_current_state;
+  Transition         m_initial_transition;
+};
+
+typedef struct SStateMachine StateMachine;
+-----
+Beschreibung::
+Dieser Typ definiert einen Automaten. Mit `m_name` kann man dem Automaten für
+Debug-Zwecke einen sprechenden Namen geben, was vor allem bei Unterautomaten
+hilfreich sein kann. Dem Memeber `m_context` kann man z. B. eine Struktur mit
+Daten mitgeben, die während der Abarbeitung des Automaten als Ein- oder Ausgabe
+dienen können. Damit ist es auch möglich, mehrere Instanzen des gleichen
+Automaten auf unterschiedlichen Daten laufen zu lassen. Der Zeiger
+`m_current_state` zeigt auf den aktiven Zustand des Automaten. Hat dieser Zeiger
+den Wert NULL, wird die mit `m_initial_transition` definierte Start-Transition
+abgearbeitet. Eine Start-Transition darf nach UML weder durch ein Event noch
+durch einen Guard eingeschränkt werden. Tatsächlich werden `m_event` und
+`m_guard` der Start-Transition einfach ignoriert, wie folgender Code-Ausschnitt
+zeigt. :
++
+[source,c]
+-----
+//______________________________________________________________________________
+void
+processStateMachine(
+    StateMachine * t_state_machine,
+    SignalEvent *  t_event ) {
+    
+  State ** current_state = &t_state_machine->m_current_state;
+  
+  //Start der StateMachine behandeln.
+  if ( NULL == *current_state ) {
+
+    *current_state = t_state_machine->m_initial_transition.m_target_state;
+
+    if ( t_state_machine->m_initial_transition.m_effect ) {
+
+      t_state_machine->m_initial_transition.m_effect(
+          t_event,
+          t_state_machine->m_context );
+    }
+    ⋮ 
+  }
+  ⋮
+} //processStateMachine
+-----
+
+//______________________________________________________________________________
+
+=== Methoden
+
+==== processStateMachine()
+Definition::
++
+[source,c]
+-----
+void
+processStateMachine(
+    StateMachine * t_state_machine,
+    SignalEvent  * t_event );
+-----
+Beschreibung::
+Diese Methode ist zyklisch vom Programm aufzurufen. Mindestens jedoch, wenn
+ein `SignalEvent` verarbeitet werden muss, oder sich eine Variable des Kontextes
+geändert hat, die durch ein `ChangeEvent` überwacht wird. Der Parameter
+`t_state_machine` gibt den abzuarbeitenden Automaten an. Mit `t_event` wird das
+zu verarbeitende Event übergeben. Die vorliegende Implementation kennt nicht
+alle Event-Typen von UML. Aber die fehlenden Typen können leicht durch
+entsprechende SignalEvents emuliert werden. Z. B. für Zeiten :
++
+[code,c]
+-----
+SignalEvent signal_event_time_10ms = {
+  .m_type_id   = EVENT_TYPE_SIGNAL,
+  .m_signal_id = SIG_ID_TIME_10MS,
+  .m_data      = NULL,
+  .m_data_size = 0,
+};
+-----
++
+Siehe auch: <<StateMachine>>, <<SignalEvent>>
 
 //______________________________________________________________________________

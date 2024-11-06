@@ -149,7 +149,6 @@ struct SExitPoint {
 
 struct SStateMachine {
   const char * const m_name;
-  StateMachine *     m_parent;
   void *             m_context;
   State *            m_current_state;
   Transition         m_initial_transition;

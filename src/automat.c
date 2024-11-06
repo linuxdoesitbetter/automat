@@ -140,7 +140,7 @@ processStateMachine(
   default:
     break;
   }
-} //triggerStateMachine
+} //processStateMachine
 
 //_____________________________________________________________________________
 static inline bool
