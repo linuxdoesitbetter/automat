@@ -42,6 +42,8 @@ h|Methoden
 
 === Typen
 
+image::KlassenDiagramm.png["Klassendiagramm"]
+
 ==== EventType
 Definition::
 +
