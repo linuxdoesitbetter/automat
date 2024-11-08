@@ -110,13 +110,13 @@ struct STransition {
 
 struct SState {
   const char * const m_name;
-  int                m_type_id;
+  StateType          m_type_id;
   StateMachine *     m_parent;
 };
 
 struct SSimpleState {
   const char * const m_name;
-  int                m_type_id;
+  StateType          m_type_id;
   StateMachine *     m_parent;
   Action             m_entry;
   Action             m_do;
@@ -127,14 +127,14 @@ struct SSimpleState {
 
 struct SCompositeState {
   const char * const m_name;
-  int                m_type_id;
+  StateType          m_type_id;
   StateMachine *     m_parent;
   StateMachine **    m_state_machines;
 };
 
 struct SEntryPoint {
   const char * const m_name;
-  int                m_type_id;
+  StateType          m_type_id;
   StateMachine *     m_parent;
   CompositeState *   m_local_target;
   State *            m_target_state;
@@ -142,7 +142,7 @@ struct SEntryPoint {
 
 struct SExitPoint {
   const char * const m_name;
-  int                m_type_id;
+  StateType          m_type_id;
   StateMachine *     m_parent;
   State *            m_target_state;
 };

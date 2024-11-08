@@ -272,7 +272,7 @@ Definition::
 -----
 struct SState {
   const char * const m_name;
-  int                m_type_id;
+  StateType          m_type_id;
   StateMachine *     m_parent;
 };
 
@@ -302,7 +302,7 @@ Definition::
 -----
 struct SSimpleState {
   const char * const m_name;           //optional
-  int                m_type_id;        //obligatorisch ≙ STATE_TYPE_SIMPLE
+  StateType          m_type_id;        //obligatorisch ≙ STATE_TYPE_SIMPLE
   StateMachine *     m_parent;         //obligatorisch
   Action             m_entry;          //optional
   Action             m_do;             //optional
@@ -331,7 +331,7 @@ Definition::
 -----
 struct SCompositeState {
   const char * const m_name;              //optional
-  int                m_type_id;           //obligatorisch ≙ STATE_TYPE_COMPOSITE
+  StateType          m_type_id;           //obligatorisch ≙ STATE_TYPE_COMPOSITE
   StateMachine *     m_parent;            //obligatorisch
   StateMachine **    m_state_machines;    //obligatorisch
 };
@@ -354,7 +354,7 @@ Definition::
 -----
 struct SEntryPoint {
   const char * const m_name;            //optional
-  int                m_type_id;         //obligatorisch ≙ STATE_TYPE_ENTRY_POINT
+  StateType          m_type_id;         //obligatorisch ≙ STATE_TYPE_ENTRY_POINT
   StateMachine *     m_parent;          //obligatorisch
   CompositeState *   m_local_target;    //obligatorisch
   State *            m_target_state;    //obligatorisch
@@ -386,7 +386,7 @@ Definition::
 -----
 struct SExitPoint {
   const char * const m_name;            //optional
-  int                m_type_id;         //obligatorisch ≙ STATE_TYPE_EXIT_POINT
+  StateType          m_type_id;         //obligatorisch ≙ STATE_TYPE_EXIT_POINT
   StateMachine *     m_parent;          //obligatorisch
   State *            m_target_state;    //obligatorisch
 };
@@ -478,11 +478,11 @@ processStateMachine(
 Beschreibung::
 Diese Methode ist zyklisch vom Programm aufzurufen. Mindestens jedoch, wenn
 ein `SignalEvent` verarbeitet werden muss, oder sich eine Variable des Kontextes
-geändert hat, die durch ein `ChangeEvent` überwacht wird. Der Parameter
-`t_state_machine` gibt den abzuarbeitenden Automaten an. Mit `t_event` wird das
-zu verarbeitende Event übergeben. Die vorliegende Implementation kennt nicht
-alle Event-Typen von UML. Aber die fehlenden Typen können leicht durch
-entsprechende SignalEvents emuliert werden. Z. B. für Zeiten :
+geändert hat, die durch ein `ChangeEvent` überwacht wird. Der Automat arbeitet
+ausschließlich im Aufruf dieser Funktion. Der Parameter `t_state_machine` gibt
+den abzuarbeitenden Automaten an. Mit `t_event` wird das zu verarbeitende Event übergeben. Die vorliegende Implementation kennt nicht alle Event-Typen von UML.
+Aber die fehlenden Typen können leicht durch entsprechende SignalEvents emuliert
+werden. Z. B. für Zeiten :
 +
 [code,c]
 -----
@@ -493,6 +493,10 @@ SignalEvent signal_event_time_10ms = {
   .m_data_size = 0,
 };
 -----
++
+ChangeEvents und `do`-Aktivitäten des aktiven Zustands werden (sofern
+definiert) bei jedem Besuch (also bei jedem Aufruf von processStateMachine())
+überprüft, bzw. abgearbeitet.
 +
 Siehe auch: <<StateMachine>>, <<SignalEvent>>
 
